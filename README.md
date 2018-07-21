@@ -1,0 +1,2 @@
+# cosregist
+cosplay-regist

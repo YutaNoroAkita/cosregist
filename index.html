@@ -313,6 +313,14 @@
       </div>
     </section>
 
+    <!-- ===== Next Event ===== -->
+    <section id="next-event" class="py-20 max-w-7xl mx-auto px-6 text-center" aria-labelledby="next-event-heading">
+      <h2 id="next-event-heading" class="text-5xl md:text-7xl font-impact text-center mb-16 italic neon-text uppercase">Next Event</h2>
+      <div id="next-event-card" class="event-card p-10 md:p-16 rounded-3xl max-w-2xl mx-auto">
+        <p class="font-oswald text-gray-400 tracking-widest">Loading...</p>
+      </div>
+    </section>
+
     <!-- ===== Events / Google Calendar ===== -->
     <section id="events" class="py-32 max-w-7xl mx-auto px-6" aria-labelledby="events-heading">
       <h2 id="events-heading" class="text-5xl md:text-7xl font-impact text-center mb-16 italic neon-text uppercase">Events</h2>
@@ -488,6 +496,39 @@
   <script>
     (() => {
       'use strict';
+
+      /* ---------- Next Event (Google Calendar API v3) ---------- */
+      const CALENDAR_ID  = 's.holicbar@gmail.com';
+      const CALENDAR_KEY = 'YOUR_API_KEY'; // ← Google Cloud Console で取得したAPIキーに変更
+
+      (async () => {
+        const card = document.getElementById('next-event-card');
+        if (!card) return;
+        try {
+          const now = new Date().toISOString();
+          const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events`
+            + `?key=${CALENDAR_KEY}&timeMin=${now}&orderBy=startTime&singleEvents=true&maxResults=1`;
+          const res  = await fetch(url);
+          const data = await res.json();
+          const ev   = data.items?.[0];
+          if (!ev) {
+            card.innerHTML = '<p class="font-oswald text-gray-400 tracking-widest uppercase">No upcoming events</p>';
+            return;
+          }
+          const start    = ev.start.dateTime ?? ev.start.date;
+          const isDateTime = !!ev.start.dateTime;
+          const d        = new Date(start);
+          const dateStr  = d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+          const timeStr  = isDateTime ? d.toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' }) : '';
+          card.innerHTML = `
+            <p class="text-cyan-400 font-oswald text-xs uppercase tracking-widest mb-3">${dateStr}${timeStr ? '&nbsp;&nbsp;' + timeStr + '〜' : ''}</p>
+            <h3 class="text-2xl md:text-3xl font-impact text-white mb-4 italic">${ev.summary ?? ''}</h3>
+            ${ev.description ? `<p class="text-gray-400 font-oswald text-sm leading-relaxed">${ev.description}</p>` : ''}
+          `;
+        } catch {
+          card.innerHTML = '<p class="font-oswald text-gray-400 tracking-widest uppercase">イベント情報を取得できませんでした</p>';
+        }
+      })();
 
       /* ---------- Footer year ---------- */
       const yearEl = document.getElementById('year');
